@@ -3,6 +3,7 @@ package com.her.aimodifier.container.snapshot
 import android.content.Context
 import com.her.aimodifier.base.constants.PathConstants
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.File
 import java.util.UUID
@@ -57,7 +58,7 @@ class ContainerSnapshotManager(private val context: Context) {
             description = description
         )
         val updated = list() + meta
-        indexFile.writeText(json.encodeToString<List<SnapshotMeta>>(updated))
+        indexFile.writeText(json.encodeToString(updated))
         return id
     }
 
@@ -75,7 +76,7 @@ class ContainerSnapshotManager(private val context: Context) {
         val current = list()
         val meta = current.firstOrNull { it.id == snapshotId } ?: return false
         File(snapshotsDir, meta.fileName).delete()
-        indexFile.writeText(json.encodeToString<List<SnapshotMeta>>(current.filterNot { it.id == snapshotId }))
+        indexFile.writeText(json.encodeToString(current.filterNot { it.id == snapshotId }))
         return true
     }
 }

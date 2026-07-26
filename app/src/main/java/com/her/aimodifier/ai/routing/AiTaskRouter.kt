@@ -10,12 +10,10 @@ import com.her.aimodifier.data.repository.AiConfigRepository
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runCatching
 import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -265,7 +263,7 @@ class AiTaskRouter(
         if (decision.target == RouteTarget.CLOUD && !isNetworkAvailable()) {
             Log.w(TAG, "网络断开，强制降级本地")
             val local = localDecision()
-            emitAll(runLocalStream(messages, local, temperature))
+            createLocalStream(messages, local, temperature).collect { emit(it) }
             return@flow
         }
 
@@ -277,7 +275,7 @@ class AiTaskRouter(
                 is KeyProbeResult.QuotaExhausted -> {
                     Log.w(TAG, "配额耗尽，切换离线本地模式")
                     if (localGgufManager.isRunning()) {
-                        emitAll(runLocalStream(messages, localDecision(), temperature))
+                        createLocalStream(messages, localDecision(), temperature).collect { emit(it) }
                         return@flow
                     }
                     throw CloudUnavailableException(
@@ -289,7 +287,7 @@ class AiTaskRouter(
                 is KeyProbeResult.RateLimited -> {
                     Log.w(TAG, "云端限流(429)，降级本地")
                     if (localGgufManager.isRunning()) {
-                        emitAll(runLocalStream(messages, localDecision(), temperature))
+                        createLocalStream(messages, localDecision(), temperature).collect { emit(it) }
                         return@flow
                     }
                     throw CloudUnavailableException(
@@ -301,7 +299,7 @@ class AiTaskRouter(
                 is KeyProbeResult.Invalid -> {
                     Log.w(TAG, "API Key 失效(${probe.msg})，降级本地")
                     if (localGgufManager.isRunning()) {
-                        emitAll(runLocalStream(messages, localDecision(), temperature))
+                        createLocalStream(messages, localDecision(), temperature).collect { emit(it) }
                         return@flow
                     }
                     throw CloudUnavailableException(
@@ -313,7 +311,7 @@ class AiTaskRouter(
                 is KeyProbeResult.Timeout -> {
                     Log.w(TAG, "API Key 探测超时，降级本地")
                     if (localGgufManager.isRunning()) {
-                        emitAll(runLocalStream(messages, localDecision(), temperature))
+                        createLocalStream(messages, localDecision(), temperature).collect { emit(it) }
                         return@flow
                     }
                     throw CloudUnavailableException(
@@ -325,7 +323,7 @@ class AiTaskRouter(
                 is KeyProbeResult.Unreachable -> {
                     Log.w(TAG, "云端不可达(${probe.msg})，降级本地")
                     if (localGgufManager.isRunning()) {
-                        emitAll(runLocalStream(messages, localDecision(), temperature))
+                        createLocalStream(messages, localDecision(), temperature).collect { emit(it) }
                         return@flow
                     }
                     throw CloudUnavailableException(
@@ -433,22 +431,21 @@ class AiTaskRouter(
         if (timeoutSignal.isCompleted) throw timeoutSignal.getCompleted()
     }
 
-    private suspend fun FlowCollector<String>.runLocalStream(
+    private fun createLocalStream(
         messages: List<ChatMessage>,
         local: RouteDecision,
         temperature: Float
-    ) {
+    ): Flow<String> {
         val request = buildRequest(messages, local, temperature)
-        val fallback = cloudClient.stream(local.baseUrl, local.apiKey, request)
-        fallback.collect { emit(it) }
+        return cloudClient.stream(local.baseUrl, local.apiKey, request)
     }
 
     private suspend fun FlowCollector<String>.runLocalStreamSafely(
         messages: List<ChatMessage>,
         local: RouteDecision,
         temperature: Float
-    ): Boolean = runCatching {
-        runLocalStream(messages, local, temperature)
+    ): Boolean = kotlin.runCatching {
+        createLocalStream(messages, local, temperature).collect { emit(it) }
     }.onFailure { e ->
         Log.e(TAG, "本地流失败：${e.message}", e)
     }.isSuccess

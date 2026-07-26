@@ -128,23 +128,23 @@ class McpClient(
         }
 
         val tool = plugin.listTools().firstOrNull { it.name == toolName }
-            ?: run {
-                val duration = System.currentTimeMillis() - startTime
-                recordCall(
-                    McpCallRecord(
-                        timestamp = startTime,
-                        toolName = fullToolName,
-                        arguments = argsSnapshot,
-                        result = "[TOOL_NOT_FOUND] 插件 $pluginId 未提供工具 $toolName",
-                        durationMs = duration,
-                        success = false
-                    )
+        if (tool == null) {
+            val duration = System.currentTimeMillis() - startTime
+            recordCall(
+                McpCallRecord(
+                    timestamp = startTime,
+                    toolName = fullToolName,
+                    arguments = argsSnapshot,
+                    result = "[TOOL_NOT_FOUND] 插件 $pluginId 未提供工具 $toolName",
+                    durationMs = duration,
+                    success = false
                 )
-                McpCallResult.Error(
-                    code = "TOOL_NOT_FOUND",
-                    message = "插件 $pluginId 未提供工具 $toolName"
-                )
-            }
+            )
+            return McpCallResult.Error(
+                code = "TOOL_NOT_FOUND",
+                message = "插件 $pluginId 未提供工具 $toolName"
+            )
+        }
 
         val missing = tool.inputSchema.filter { (paramName, param) ->
             param.required && !arguments.containsKey(paramName)
