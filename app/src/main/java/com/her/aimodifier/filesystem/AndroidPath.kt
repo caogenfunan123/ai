@@ -25,5 +25,5 @@ object AndroidPath {
     fun rootfsRoot(): String = PathConstants.rootfsRoot.absolutePath
 
     /** 工具链目录（容器视角 /opt/toolchain 对应的本机路径） */
-    fun toolchainDir(): String = PathConstants.toolchainDir.absolutePath
+    fun toolchainDir(): String = PathConstants.containerToolchainDir.absolutePath
 }

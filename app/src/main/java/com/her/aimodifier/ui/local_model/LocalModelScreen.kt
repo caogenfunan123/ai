@@ -16,7 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDownload
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Error
@@ -161,7 +161,7 @@ fun LocalModelScreen(
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(
-                                Icons.Default.ArrowDownload,
+                                Icons.Default.Download,
                                 contentDescription = null,
                                 modifier = Modifier.size(18.dp)
                             )
@@ -201,11 +201,16 @@ fun LocalModelScreen(
                                     )
                                 }
                                 Spacer(Modifier.height(10.dp))
-                                LinearProgressIndicator(
-                                    progress = { if (downloadProgress >= 0) downloadProgress / 100f else 0f },
-                                    modifier = Modifier.fillMaxWidth(),
-                                    isIndeterminate = downloadProgress < 0
-                                )
+                                if (downloadProgress < 0) {
+                                    LinearProgressIndicator(
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                } else {
+                                    LinearProgressIndicator(
+                                        progress = { downloadProgress / 100f },
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                                 if (downloadProgress >= 0) {
                                     Text(
                                         "${downloadProgress}%",
@@ -512,7 +517,7 @@ private fun EmptyState(
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                Icons.Default.ArrowDownload,
+                Icons.Default.Download,
                 contentDescription = null,
                 modifier = Modifier.size(80.dp),
                 tint = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
@@ -534,7 +539,7 @@ private fun EmptyState(
                 onClick = onDownloadClick
             ) {
                 Icon(
-                    Icons.Default.ArrowDownload,
+                    Icons.Default.Download,
                     contentDescription = null,
                     modifier = Modifier.size(18.dp)
                 )
@@ -610,7 +615,7 @@ private fun DownloadModelDialog(
                                         Icon(
                                             when (value) {
                                                 LocalModelViewModel.SAVE_PRIVATE -> Icons.Default.Home
-                                                LocalModelViewModel.SAVE_PUBLIC -> Icons.Default.ArrowDownload
+                                                LocalModelViewModel.SAVE_PUBLIC -> Icons.Default.Download
                                                 else -> Icons.Default.SdStorage
                                             },
                                             contentDescription = null,

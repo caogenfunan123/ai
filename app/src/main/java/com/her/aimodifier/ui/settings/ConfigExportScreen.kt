@@ -139,7 +139,7 @@ fun ConfigExportScreen(
     ) { uri ->
         uri?.let {
             try {
-                context.contentResolver.openOutputStream(uri)?.use { os ->
+                context.contentResolver.openOutputStream(it)?.use { os ->
                     os.write(exportJson.toByteArray(Charsets.UTF_8))
                 }
                 coroutineScope.launch {
@@ -156,17 +156,19 @@ fun ConfigExportScreen(
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        try {
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                val jsonText = input.readBytes().toString(Charsets.UTF_8)
-                importJson = jsonText
-                val preview = JsonUtil.json.decodeFromString(FullConfigExport.serializer(), jsonText)
-                importPreview = preview
-                showImportPreview = true
-            }
-        } catch (e: Exception) {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar("导入失败：${e.message}")
+        uri?.let {
+            try {
+                context.contentResolver.openInputStream(it)?.use { input ->
+                    val jsonText = input.readBytes().toString(Charsets.UTF_8)
+                    importJson = jsonText
+                    val preview = JsonUtil.json.decodeFromString(FullConfigExport.serializer(), jsonText)
+                    importPreview = preview
+                    showImportPreview = true
+                }
+            } catch (e: Exception) {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("导入失败：${e.message}")
+                }
             }
         }
     }

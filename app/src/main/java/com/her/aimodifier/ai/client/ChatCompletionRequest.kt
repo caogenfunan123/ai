@@ -25,13 +25,13 @@ data class ChatMessage(
 
 @Serializable
 data class ToolCall(
-    val id: String,
+    val id: String? = null,
     val type: String = "function",
     val function: ToolFunction
 )
 
 @Serializable
 data class ToolFunction(
-    val name: String,
-    val arguments: String   // JSON string
+    val name: String? = null,
+    val arguments: String = ""
 )

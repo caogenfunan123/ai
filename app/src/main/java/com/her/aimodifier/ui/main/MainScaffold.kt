@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.her.aimodifier.base.navigation.Destinations
+import com.her.aimodifier.ui.chat.ChatPane
 import kotlinx.coroutines.launch
 
 /**

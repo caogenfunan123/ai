@@ -57,7 +57,7 @@ class ContainerSnapshotManager(private val context: Context) {
             description = description
         )
         val updated = list() + meta
-        indexFile.writeText(json.encodeToString(updated))
+        indexFile.writeText(json.encodeToString<List<SnapshotMeta>>(updated))
         return id
     }
 
@@ -75,7 +75,7 @@ class ContainerSnapshotManager(private val context: Context) {
         val current = list()
         val meta = current.firstOrNull { it.id == snapshotId } ?: return false
         File(snapshotsDir, meta.fileName).delete()
-        indexFile.writeText(json.encodeToString(current.filterNot { it.id == snapshotId }))
+        indexFile.writeText(json.encodeToString<List<SnapshotMeta>>(current.filterNot { it.id == snapshotId }))
         return true
     }
 }

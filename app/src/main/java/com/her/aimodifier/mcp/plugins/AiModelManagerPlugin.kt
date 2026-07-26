@@ -418,7 +418,7 @@ class AiModelManagerPlugin(
                 metadata = mapOf(
                     "modelId" to modelId.toString(),
                     "status" to "DAMAGED",
-                    "storedSha256" to storedSha256,
+                    "storedSha256" to (storedSha256 ?: ""),
                     "actualSha256" to actualSha256
                 )
             )

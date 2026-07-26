@@ -4,9 +4,12 @@ import android.content.Context
 import android.util.Log
 import com.her.aimodifier.container.env.RootEnvironmentDetector
 import com.her.aimodifier.utils.ShellUtil
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -127,7 +130,7 @@ class LocalGgufManager(
             loadMutex.withLock {
                 if (sessions.values.any { it.process.isAlive }) {
                     Log.w(TAG, "已有模型在加载中，请等待当前操作完成")
-                    return@withLock
+                    return@withLock false
                 }
 
                 val assignedPort = if (port > 0) port else nextPort++
@@ -204,7 +207,7 @@ class LocalGgufManager(
 
     private fun startAutoUnloadWatcher() {
         if (autoUnloadJob?.isActive == true) return
-        autoUnloadJob = kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
+        autoUnloadJob = GlobalScope.launch(Dispatchers.IO) {
             while (true) {
                 delay(autoUnloadTimeoutMs / 2)
                 autoUnloadIdle(autoUnloadTimeoutMs)

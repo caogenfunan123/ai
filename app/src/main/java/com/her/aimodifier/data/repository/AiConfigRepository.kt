@@ -105,6 +105,15 @@ class AiConfigRepository(
         dao.updateManualModels(configId, manualModels, manualMode)
     }
 
+    suspend fun upsert(entity: AiConfigEntity): AiConfigEntity {
+        val existing = entity.id.takeIf { it > 0 }?.let { dao.findById(it) }
+        val id = dao.upsert(entity)
+        if (existing == null || existing.apiKey != entity.apiKey) {
+            prefs.setApiKey(entity.workspaceId, entity.apiKey)
+        }
+        return entity.copy(id = if (entity.id > 0) entity.id else id)
+    }
+
     suspend fun delete(id: Long) {
         dao.deleteById(id)
     }

@@ -256,15 +256,15 @@ class ChatViewModel(
         }.getOrNull() ?: return
 
         val taskId = jsonObj["taskId"]?.jsonPrimitive?.content
-        val workspaceId = jsonObj["workspaceId"]?.jsonPrimitive?.contentOrNull
+        val workspaceId = jsonObj["workspaceId"]?.jsonPrimitive?.content
         val args = jsonObj["args"]?.jsonObject
 
         if (taskId == null) return
 
         val argsMap = args?.toMap()?.mapValues { (_, v) ->
             when (v) {
-                is kotlinx.serialization.json.JsonPrimitive -> v.contentOrNull
-                else v.toString()
+                is kotlinx.serialization.json.JsonPrimitive -> v.content
+                else -> v.toString()
             }
         } ?: emptyMap()
 
@@ -288,6 +288,7 @@ class ChatViewModel(
                 )) {
                     is McpCallResult.Success -> appendToolLog(envResult.result)
                     is McpCallResult.Error -> appendToolLog("❌ 环境检测失败: ${envResult.message}")
+                    is McpCallResult.Stream -> appendToolLog("⏳ 流式结果（跳过）")
                 }
 
                 appendToolLog("── 步骤 2/3: 任务准备 ($taskId) ──")
@@ -300,6 +301,7 @@ class ChatViewModel(
                         appendToolLog("❌ 任务准备失败: ${prepResult.message}")
                         return@launch
                     }
+                    is McpCallResult.Stream -> appendToolLog("⏳ 流式结果（跳过）")
                 }
 
                 val command = args["command"] as? String

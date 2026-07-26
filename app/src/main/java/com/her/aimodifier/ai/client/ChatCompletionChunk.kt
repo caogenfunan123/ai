@@ -28,19 +28,6 @@ data class ChatCompletionChunk(
     )
 }
 
-@Serializable
-data class ToolCall(
-    val id: String? = null,
-    val type: String = "function",
-    val function: ToolFunction
-)
-
-@Serializable
-data class ToolFunction(
-    val name: String? = null,
-    val arguments: String = ""
-)
-
 /** /v1/models 接口返回 */
 @Serializable
 data class ModelsResponse(

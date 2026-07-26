@@ -77,7 +77,7 @@ abstract class AppDatabase : RoomDatabase() {
 
         @Suppress("unused")
         private fun newSqlCipherKey(): ByteArray =
-            SQLiteDatabase.getBytes(UUID_RANDOM_32())
+            UUID_RANDOM_32()
     }
 }
 

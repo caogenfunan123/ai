@@ -146,8 +146,9 @@ class McpClient(
                 )
             }
 
-        val missing = tool.inputSchema.filterValues { it.required }
-            .filterKeys { key -> arguments[key] == null }
+        val missing = tool.inputSchema.filter { (paramName, param) ->
+            param.required && !arguments.containsKey(paramName)
+        }
         if (missing.isNotEmpty()) {
             val duration = System.currentTimeMillis() - startTime
             recordCall(

@@ -7,8 +7,13 @@ import com.her.aimodifier.ai.client.OpenAiStreamClient
 import com.her.aimodifier.ai.client.StreamException
 import com.her.aimodifier.ai.local_gguf.LocalGgufManager
 import com.her.aimodifier.data.repository.AiConfigRepository
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runCatching
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -212,8 +217,8 @@ class AiTaskRouter(
             when {
                 result == null -> KeyProbeResult.Timeout
                 result.isSuccess -> KeyProbeResult.Ok
-                result.isFailure -> {
-                    val ex = result.exceptionOrNull()
+                else -> {
+                    val ex = result?.exceptionOrNull()
                     val code = (ex as? StreamException)?.code
                     when (code) {
                         HTTP_UNAUTHORIZED, HTTP_FORBIDDEN -> KeyProbeResult.Invalid("HTTP $code")
@@ -394,12 +399,12 @@ class AiTaskRouter(
         request: ChatCompletionRequest,
         decision: RouteDecision
     ) {
-        val firstTokenReceived = kotlinx.coroutines.CompletableDeferred<Unit>()
+        val firstTokenReceived = CompletableDeferred<Unit>()
         val up = cloudClient.stream(decision.baseUrl, decision.apiKey, request)
-        val timeoutSignal = kotlinx.coroutines.CompletableDeferred<Throwable>()
+        val timeoutSignal = CompletableDeferred<Throwable>()
 
         // supervisorScope 隔离 readyJob 的失败，避免它直接取消父协程
-        kotlinx.coroutines.supervisorScope {
+        supervisorScope {
             val readyJob = launch {
                 val result = withTimeoutOrNull(CLOUD_READY_TIMEOUT_MS) {
                     firstTokenReceived.await()
@@ -418,7 +423,7 @@ class AiTaskRouter(
             } catch (t: Throwable) {
                 readyJob.cancel()
                 if (!firstTokenReceived.isCompleted) firstTokenReceived.completeExceptionally(t)
-                kotlinx.coroutines.runCatching { readyJob.join() }
+                runCatching { readyJob.join() }
                 throw t
             }
             readyJob.join()

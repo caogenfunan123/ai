@@ -40,6 +40,12 @@ object DownloadUtil {
 
     private val downloadScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    data class DownloadInfo(
+        val url: String,
+        val destPath: String,
+        val expectedSha256: String?
+    )
+
     private data class DownloadTask(
         val url: String,
         val dest: File,
@@ -55,8 +61,8 @@ object DownloadUtil {
     private val _isDownloading = MutableStateFlow(false)
     val isDownloading: StateFlow<Boolean> = _isDownloading.asStateFlow()
 
-    private val _activeDownloads = MutableStateFlow<List<DownloadTask>>(emptyList())
-    val activeDownloads: StateFlow<List<DownloadTask>> = _activeDownloads.asStateFlow()
+    private val _activeDownloads = MutableStateFlow<List<DownloadInfo>>(emptyList())
+    val activeDownloads: StateFlow<List<DownloadInfo>> = _activeDownloads.asStateFlow()
 
     fun downloadWithProgress(
         url: String,
@@ -199,7 +205,13 @@ object DownloadUtil {
         if (_isDownloading.value) return
         val task = downloadQueue.poll() ?: return
         _isDownloading.value = true
-        _activeDownloads.value = listOf(task)
+        _activeDownloads.value = listOf(
+            DownloadInfo(
+                url = task.url,
+                destPath = task.dest.absolutePath,
+                expectedSha256 = task.expectedSha256
+            )
+        )
 
         downloadScope.launch {
             try {

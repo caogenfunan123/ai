@@ -31,8 +31,8 @@ fun AppNavGraph() {
             route = Destinations.WORKSPACE,
         ) {
             WorkspaceScreen(
-                onOpenWorkspace = { id ->
-                    nav.navigate(Destinations.chat(id)) {
+                onOpenWorkspace = { workspace ->
+                    nav.navigate(Destinations.chat(workspace.workspaceId)) {
                         popUpTo(Destinations.MAIN) { saveState = true }
                         launchSingleTop = true
                     }

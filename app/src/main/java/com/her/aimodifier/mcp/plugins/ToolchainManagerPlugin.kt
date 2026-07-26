@@ -11,7 +11,9 @@ import com.her.aimodifier.mcp.core.McpParam
 import com.her.aimodifier.mcp.core.McpPlugin
 import com.her.aimodifier.mcp.core.McpTool
 import com.her.aimodifier.utils.ShellUtil
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.withContext
 
 /**
  * 工具链调度 MCP 插件（android.toolchain_manager）。
@@ -206,15 +208,19 @@ class ToolchainManagerPlugin(
                 append("export PATH=\"$envPath\" && ")
                 append(command)
             }
-            if (pathResolver.useRootNative) {
-                // Root 本机直接执行
-                val r = ShellUtil.exec(listOf("sh", "-c", wrapped), effectiveCwd)
-                emit("[exit=${r.exitCode}]")
-                if (r.stdout.isNotEmpty()) emit(r.stdout)
-                if (r.stderr.isNotEmpty()) emit("[stderr] ${r.stderr}")
-            } else {
-                // 通过 PRoot 容器执行
-                containerManager.exec(wrapped, effectiveCwd) { line -> emit(line + "\n") }
+            withContext(Dispatchers.IO) {
+                if (pathResolver.useRootNative) {
+                    // Root 本机直接执行
+                    val r = ShellUtil.exec(listOf("sh", "-c", wrapped), effectiveCwd)
+                    emit("[exit=${r.exitCode}]")
+                    if (r.stdout.isNotEmpty()) emit(r.stdout)
+                    if (r.stderr.isNotEmpty()) emit("[stderr] ${r.stderr}")
+                } else {
+                    // 通过 PRoot 容器执行
+                    val lines = mutableListOf<String>()
+                    containerManager.exec(wrapped, effectiveCwd) { line -> lines.add(line + "\n") }
+                    lines.forEach { emit(it) }
+                }
             }
         }
         return McpCallResult.Stream(stream)

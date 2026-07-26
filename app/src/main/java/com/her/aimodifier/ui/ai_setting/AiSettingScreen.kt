@@ -134,25 +134,27 @@ fun AiSettingScreen(
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
-        try {
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                val jsonText = input.readBytes().toString(Charsets.UTF_8)
-                val cfg = Json.decodeFromString<ExportConfig>(jsonText)
-                baseUrl = cfg.baseUrl
-                apiKey = cfg.apiKey
-                defaultModel = cfg.defaultModel
-                timeoutMs = cfg.timeoutMs.toString()
-                contextLength = cfg.contextLength.toString()
-                temperature = cfg.temperature
-                baseUrlError = false
-                apiKeyError = false
-                coroutineScope.launch {
-                    snackbarHostState.showSnackbar("配置导入成功")
+        uri?.let {
+            try {
+                context.contentResolver.openInputStream(it)?.use { input ->
+                    val jsonText = input.readBytes().toString(Charsets.UTF_8)
+                    val cfg = Json.decodeFromString<ExportConfig>(jsonText)
+                    baseUrl = cfg.baseUrl
+                    apiKey = cfg.apiKey
+                    defaultModel = cfg.defaultModel
+                    timeoutMs = cfg.timeoutMs.toString()
+                    contextLength = cfg.contextLength.toString()
+                    temperature = cfg.temperature
+                    baseUrlError = false
+                    apiKeyError = false
+                    coroutineScope.launch {
+                        snackbarHostState.showSnackbar("配置导入成功")
+                    }
                 }
-            }
-        } catch (e: Exception) {
-            coroutineScope.launch {
-                snackbarHostState.showSnackbar("导入失败：${e.message}")
+            } catch (e: Exception) {
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar("导入失败：${e.message}")
+                }
             }
         }
     }
@@ -440,7 +442,7 @@ fun AiSettingScreen(
                 }
             }
 
-            Spacer(Modifier.height(4.dp))
+            item { Spacer(Modifier.height(4.dp)) }
 
             // 其他操作
             item {
@@ -480,7 +482,7 @@ fun AiSettingScreen(
                 }
             }
 
-            Spacer(Modifier.height(8.dp))
+            item { Spacer(Modifier.height(8.dp)) }
 
             // 保存按钮
             item {
