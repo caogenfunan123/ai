@@ -32,22 +32,42 @@ jobs:
         run: ./gradlew assembleRelease --no-daemon
         continue-on-error: true
 
-      - name: Upload Debug APK
+      - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ai-modifier-debug-apk
           path: app/build/outputs/apk/debug/*.apk
 
-      - name: Upload Release APK
+      - name: Upload Release APK Artifact
         uses: actions/upload-artifact@v4
         if: success()
         with:
           name: ai-modifier-release-apk
           path: app/build/outputs/apk/release/*.apk
 
-      - name: Upload mapping.txt
-        uses: actions/upload-artifact@v4
-        if: success()
+      - name: Create GitHub Release and Upload APK
+        uses: softprops/action-gh-release@v2
         with:
-          name: proguard-mapping
-          path: app/build/outputs/mapping/release/mapping.txt
+          tag_name: v1.0.0-${{ github.run_number }}
+          name: AI魔改器 v1.0.0 Build ${{ github.run_number }}
+          body: |
+            ## AI魔改器 v1.0.0
+
+            ### 下载说明
+            - `app-debug.apk` 为 Debug 版本，可直接安装
+            - Debug 版本已内置测试签名，可直接安装使用
+
+            ### 功能特性
+            - PRoot ARM64 Ubuntu 容器
+            - 全栈工具链按需下载
+            - MCP 双插件调度系统
+            - AI 智能路由 + 自动降级
+            - 工作区管理 + 会话绑定
+            - 本地 GGUF 模型管理
+          files: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/outputs/apk/release/*.apk
+          prerelease: false
+          draft: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
