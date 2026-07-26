@@ -1,0 +1,79 @@
+{
+  "_meta": {
+    "version": "1.0-final",
+    "arch": "arm64-v8a",
+    "description": "AI魔改器最终定稿任务-工具依赖清单（系统核心基准，AI 严格遵守）"
+  },
+  "tools": [
+    {"name": "jdk21",            "category": "build",    "containerPath": "/opt/toolchain/jdk",            "rootPath": "toolchain/jdk"},
+    {"name": "android-sdk-cmd",  "category": "build",    "containerPath": "/opt/toolchain/android-sdk",    "rootPath": "toolchain/android-sdk"},
+    {"name": "platforms-11-14",  "category": "build",    "containerPath": "/opt/toolchain/android-sdk/platforms", "rootPath": "toolchain/android-sdk/platforms"},
+    {"name": "ndk-r26c",         "category": "build",    "containerPath": "/opt/toolchain/ndk",            "rootPath": "toolchain/ndk"},
+    {"name": "gradle8.7",        "category": "build",    "containerPath": "/opt/toolchain/gradle",         "rootPath": "toolchain/gradle"},
+    {"name": "aapt2",            "category": "build",    "containerPath": "/opt/toolchain/extra-bin/aapt2", "rootPath": "toolchain/extra-bin/aapt2"},
+    {"name": "zipalign",         "category": "build",    "containerPath": "/opt/toolchain/extra-bin/zipalign", "rootPath": "toolchain/extra-bin/zipalign"},
+    {"name": "apksigner",        "category": "build",    "containerPath": "/opt/toolchain/extra-bin/apksigner", "rootPath": "toolchain/extra-bin/apksigner"},
+    {"name": "apktool",          "category": "build",    "containerPath": "/opt/toolchain/apktool",        "rootPath": "toolchain/apktool"},
+    {"name": "uber-apk-signer",  "category": "build",    "containerPath": "/opt/toolchain/extra-bin/uber-apk-signer", "rootPath": "toolchain/extra-bin/uber-apk-signer"},
+    {"name": "lspatch",          "category": "repack",   "containerPath": "/opt/toolchain/lspatch",        "rootPath": "toolchain/lspatch"},
+    {"name": "magiskboot",       "category": "magisk",   "containerPath": "/opt/toolchain/magisk-tools/magiskboot", "rootPath": "toolchain/magisk-tools/magiskboot"},
+    {"name": "avbtool",          "category": "magisk",   "containerPath": "/opt/toolchain/magisk-tools/avbtool", "rootPath": "toolchain/magisk-tools/avbtool"},
+    {"name": "busybox-arm64",    "category": "magisk",   "containerPath": "/opt/toolchain/magisk-tools/busybox", "rootPath": "toolchain/magisk-tools/busybox"},
+    {"name": "ksud",             "category": "ksu",      "containerPath": "/opt/toolchain/magisk-tools/ksud", "rootPath": "toolchain/magisk-tools/ksud"},
+    {"name": "sepolicy-inject",  "category": "ksu",      "containerPath": "/opt/toolchain/magisk-tools/sepolicy-inject", "rootPath": "toolchain/magisk-tools/sepolicy-inject"},
+    {"name": "resetprop",        "category": "ksu",      "containerPath": "/opt/toolchain/magisk-tools/resetprop", "rootPath": "toolchain/magisk-tools/resetprop"},
+    {"name": "frida-server-arm64","category": "hook",    "containerPath": "/opt/toolchain/frida/frida-server", "rootPath": "toolchain/frida/frida-server"},
+    {"name": "frida-tools",      "category": "hook",     "containerPath": "/opt/toolchain/frida/tools",    "rootPath": "toolchain/frida/tools"},
+    {"name": "objection",        "category": "hook",     "containerPath": "/opt/toolchain/frida/objection","rootPath": "toolchain/frida/objection"},
+    {"name": "jadx-cli",         "category": "reverse",  "containerPath": "/opt/toolchain/extra-bin/jadx", "rootPath": "toolchain/extra-bin/jadx"},
+    {"name": "dex2jar",          "category": "reverse",  "containerPath": "/opt/toolchain/extra-bin/dex2jar", "rootPath": "toolchain/extra-bin/dex2jar"},
+    {"name": "mitmproxy",        "category": "capture",  "containerPath": "/opt/toolchain/mitmproxy",      "rootPath": "toolchain/mitmproxy"},
+    {"name": "socat",            "category": "capture",  "containerPath": "/opt/toolchain/extra-bin/socat","rootPath": "toolchain/extra-bin/socat"},
+    {"name": "tcpdump",          "category": "capture",  "containerPath": "/opt/toolchain/extra-bin/tcpdump", "rootPath": "toolchain/extra-bin/tcpdump"},
+    {"name": "strace",           "category": "capture",  "containerPath": "/opt/toolchain/extra-bin/strace","rootPath": "toolchain/extra-bin/strace"},
+    {"name": "openssl",          "category": "capture",  "containerPath": "/opt/toolchain/extra-bin/openssl", "rootPath": "toolchain/extra-bin/openssl"},
+    {"name": "patchelf",         "category": "capture",  "containerPath": "/opt/toolchain/extra-bin/patchelf", "rootPath": "toolchain/extra-bin/patchelf"}
+  ],
+  "tasks": [
+    {
+      "taskId": "apk_build",
+      "description": "APK 编译任务：JDK21 + Android SDK + NDK r26c + Gradle 8.7 + aapt2 + 签名工具",
+      "tools": ["jdk21", "android-sdk-cmd", "platforms-11-14", "ndk-r26c", "gradle8.7", "aapt2", "zipalign", "apksigner", "apktool", "uber-apk-signer"]
+    },
+    {
+      "taskId": "lspatch_repack",
+      "description": "LSPatch 免Root重打包：lspatch + apktool + uber-apk-signer",
+      "tools": ["lspatch", "apktool", "uber-apk-signer", "jdk21"]
+    },
+    {
+      "taskId": "magisk_mod",
+      "description": "Magisk 模块编译：magiskboot + avbtool + busybox",
+      "tools": ["magiskboot", "avbtool", "busybox-arm64"]
+    },
+    {
+      "taskId": "ksu_module_build",
+      "description": "KernelSU 模块编译：ksud + NDK + JDK + sepolicy-inject + resetprop",
+      "tools": ["ksud", "ndk-r26c", "jdk21", "sepolicy-inject", "resetprop"]
+    },
+    {
+      "taskId": "frida_hook",
+      "description": "Frida Hook 逆向：frida-server + frida-tools + objection",
+      "tools": ["frida-server-arm64", "frida-tools", "objection"]
+    },
+    {
+      "taskId": "static_reverse",
+      "description": "静态逆向分析：jadx-cli + dex2jar",
+      "tools": ["jadx-cli", "dex2jar"]
+    },
+    {
+      "taskId": "traffic_capture",
+      "description": "抓包与加密调试：mitmproxy + socat + tcpdump + strace + openssl + patchelf",
+      "tools": ["mitmproxy", "socat", "tcpdump", "strace", "openssl", "patchelf"]
+    }
+  ],
+  "toolVersions": {
+    "frida":      ["16.5.9", "16.3.3", "16.1.0"],
+    "gradle":     ["8.7", "8.5", "8.0"],
+    "ndk":        ["r26c", "r25c", "r26b"]
+  }
+}

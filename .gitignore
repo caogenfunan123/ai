@@ -1,0 +1,50 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+# Android Studio / IntelliJ
+*.iml
+.idea/
+local.properties
+*.hprof
+*.apk
+*.aab
+*.ap_
+*.aab
+
+# Kotlin
+*.hprof
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Android
+captures/
+.externalNativeBuild/
+.cxx/
+*.keystore
+*.jks
+
+# Local
+*.local
+
+# ProGuard
+proguard/seeds.txt
+proguard/mapping.txt
+proguard/usage.txt
+proguard/resources.txt
+
+# Backup files
+*~
+*.bak
+*.swp
+
+# Environment
+.env

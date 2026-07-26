@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <exclude domain="sharedpref" path="ai_config.xml"/>
+        <exclude domain="database" path="aimodifier.db"/>
+    </cloud-backup>
+    <device-transfer>
+        <exclude domain="sharedpref" path="ai_config.xml"/>
+        <exclude domain="database" path="aimodifier.db"/>
+    </device-transfer>
+</data-extraction-rules>

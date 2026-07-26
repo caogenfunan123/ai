@@ -1,0 +1,15 @@
+{
+  "globalAiConfig": {
+    "scope": "global",
+    "baseUrl": "https://api.openai.com/v1",
+    "defaultModel": "gpt-4o-mini",
+    "timeoutMs": 30000,
+    "contextLength": 8192,
+    "temperature": 0.7
+  },
+  "globalSystemPrompt": "你是 AI 魔改器的助手。回答简短直接，遇到不确定的信息主动说明。需要执行编译、Hook、抓包等操作时，通过工具调用完成。",
+  "container": {
+    "autoStartOnFirstLaunch": false,
+    "defaultRootfsUrl": "https://dl.compilerbox.dev/rootfs/ubuntu-24.04-proot-min.zst"
+  }
+}

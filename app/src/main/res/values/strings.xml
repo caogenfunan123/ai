@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AI魔改器</string>
+    <string name="default_workspace_name">未命名工作区</string>
+    <string name="notification_channel_download">下载任务</string>
+    <string name="notification_channel_long_task">长任务</string>
+    <string name="notification_download_text">正在下载…</string>
+    <string name="notification_long_task_text">任务执行中…</string>
+</resources>
