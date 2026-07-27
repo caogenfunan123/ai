@@ -318,7 +318,7 @@ class GeminiProvider(
 
                     if (jsonDepth == 0) {
                         val possibleJson = jsonBuilder.toString()
-                        val content = extractContentFromJsonString(possibleJson)
+                        val content = extractContentFromJson(possibleJson)
                         if (content.isNotEmpty()) {
                             emit(content)
                         }
@@ -334,7 +334,7 @@ class GeminiProvider(
 
                     if (jsonDepth == 0) {
                         val possibleJson = jsonBuilder.toString()
-                        val content = extractContentFromJsonString(possibleJson)
+                        val content = extractContentFromJson(possibleJson)
                         if (content.isNotEmpty()) {
                             emit(content)
                         }
@@ -346,7 +346,7 @@ class GeminiProvider(
 
             // 处理剩余的 JSON
             if (isCollectingJson && jsonBuilder.isNotEmpty()) {
-                val content = extractContentFromJsonString(jsonBuilder.toString())
+                val content = extractContentFromJson(jsonBuilder.toString())
                 if (content.isNotEmpty()) {
                     emit(content)
                 }

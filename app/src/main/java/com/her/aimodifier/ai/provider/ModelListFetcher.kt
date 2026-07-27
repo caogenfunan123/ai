@@ -142,6 +142,7 @@ object ModelListFetcher {
                                 ?.newBuilder()
                                 ?.setQueryParameter("key", apiKey)
                                 ?.build()
+                                ?.toString()
                                 ?: modelsUrl
                             requestBuilder.url(urlWithKey)
                         }
@@ -260,6 +261,7 @@ object ModelListFetcher {
                             ApiProviderType.ANTHROPIC_GENERIC -> parseAnthropicModelResponse(responseBody)
                             ApiProviderType.GOOGLE,
                             ApiProviderType.GEMINI_GENERIC -> parseGoogleModelResponse(responseBody)
+                            else -> parseOpenAIModelResponse(responseBody)
                         }
                     } catch (e: Exception) {
                         Log.e(TAG, "解析响应失败: ${e.message}")
@@ -398,7 +400,7 @@ object ModelListFetcher {
 
 private fun String.toHttpUrlOrNull(): okhttp3.HttpUrl? {
     return try {
-        okhttp3.HttpUrl.get(this)
+        okhttp3.HttpUrl.parse(this)
     } catch (e: Exception) {
         null
     }

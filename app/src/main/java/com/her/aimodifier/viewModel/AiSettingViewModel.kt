@@ -546,7 +546,7 @@ class AiSettingViewModel(
                 )
 
                 result.onSuccess { modelOptions ->
-                    val modelInfos = modelOptions.map { ModelInfo(id = it.id, name = it.id) }
+                    val modelInfos = modelOptions.map { ModelInfo(id = it.id, owned_by = null) }
                     _models.value = modelInfos
 
                     _config.value?.id?.let { id ->
