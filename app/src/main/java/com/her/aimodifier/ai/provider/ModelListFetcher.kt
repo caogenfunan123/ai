@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
@@ -400,7 +401,7 @@ object ModelListFetcher {
 
 private fun String.toHttpUrlSafe(): okhttp3.HttpUrl? {
     return try {
-        okhttp3.HttpUrl.Companion.toHttpUrlOrNull(this)
+        toHttpUrlOrNull()
     } catch (e: Exception) {
         null
     }
