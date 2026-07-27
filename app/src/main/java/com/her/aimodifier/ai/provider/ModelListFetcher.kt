@@ -138,7 +138,7 @@ object ModelListFetcher {
                     when (apiProviderType) {
                         ApiProviderType.GOOGLE,
                         ApiProviderType.GEMINI_GENERIC -> {
-                            val urlWithKey = modelsUrl.toHttpUrlOrNull()
+                            val urlWithKey = modelsUrl.toHttpUrlSafe()
                                 ?.newBuilder()
                                 ?.setQueryParameter("key", apiKey)
                                 ?.build()
@@ -398,9 +398,9 @@ object ModelListFetcher {
     }
 }
 
-private fun String.toHttpUrlOrNull(): okhttp3.HttpUrl? {
+private fun String.toHttpUrlSafe(): okhttp3.HttpUrl? {
     return try {
-        okhttp3.HttpUrl.parse(this)
+        okhttp3.HttpUrl.Companion.toHttpUrlOrNull(this)
     } catch (e: Exception) {
         null
     }
