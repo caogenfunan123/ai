@@ -32,7 +32,7 @@ import net.sqlcipher.database.SupportFactory
         AiConfigEntity::class,
         LocalModelEntity::class
     ],
-    version = 2,
+    version = 4,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {

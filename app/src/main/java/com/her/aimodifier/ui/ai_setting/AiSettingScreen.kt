@@ -50,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.her.aimodifier.base.constants.AppConstants
 import com.her.aimodifier.viewModel.AiSettingViewModel
+import com.her.aimodifier.viewModel.PresetProvider
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
@@ -60,6 +61,7 @@ private data class ExportConfig(
     val baseUrl: String = "",
     val apiKey: String = "",
     val defaultModel: String = "",
+    val providerType: String = "DEEPSEEK",
     val timeoutMs: Long = AppConstants.AI_CLOUD_TIMEOUT_MS,
     val contextLength: Int = AppConstants.DEFAULT_CONTEXT_LENGTH,
     val temperature: Float = AppConstants.DEFAULT_TEMPERATURE
@@ -87,6 +89,7 @@ fun AiSettingScreen(
     var baseUrl by remember(config) { mutableStateOf(config?.baseUrl.orEmpty()) }
     var apiKey by remember(config) { mutableStateOf(config?.apiKey.orEmpty()) }
     var defaultModel by remember(config) { mutableStateOf(config?.defaultModel.orEmpty()) }
+    var providerType by remember(config) { mutableStateOf(config?.providerType ?: "DEEPSEEK") }
     var manualModels by remember(config) { mutableStateOf(config?.manualModels.orEmpty()) }
     var timeoutMs by remember(config) {
         mutableStateOf((config?.timeoutMs ?: AppConstants.AI_CLOUD_TIMEOUT_MS).toString())
@@ -97,6 +100,8 @@ fun AiSettingScreen(
     var temperature by remember(config) {
         mutableStateOf(config?.temperature ?: AppConstants.DEFAULT_TEMPERATURE)
     }
+    var enableToolCall by remember(config) { mutableStateOf(config?.enableToolCall ?: false) }
+    var systemPrompt by remember(config) { mutableStateOf(config?.systemPrompt.orEmpty()) }
 
     var scope by remember(workspaceId) {
         mutableStateOf(
@@ -109,6 +114,7 @@ fun AiSettingScreen(
     var apiKeyError by remember { mutableStateOf(false) }
 
     var showModelDialog by remember { mutableStateOf(false) }
+    var showPresetDialog by remember { mutableStateOf(false) }
     var showExportDialog by remember { mutableStateOf(false) }
     var selectedModel by remember { mutableStateOf(defaultModel) }
     var exportJsonText by remember { mutableStateOf("") }
@@ -142,6 +148,7 @@ fun AiSettingScreen(
                     baseUrl = cfg.baseUrl
                     apiKey = cfg.apiKey
                     defaultModel = cfg.defaultModel
+                    providerType = cfg.providerType
                     timeoutMs = cfg.timeoutMs.toString()
                     contextLength = cfg.contextLength.toString()
                     temperature = cfg.temperature
@@ -179,12 +186,22 @@ fun AiSettingScreen(
         baseUrl = ""
         apiKey = ""
         defaultModel = ""
+        providerType = "DEEPSEEK"
         manualModels = ""
         timeoutMs = AppConstants.AI_CLOUD_TIMEOUT_MS.toString()
         contextLength = AppConstants.DEFAULT_CONTEXT_LENGTH.toString()
         temperature = AppConstants.DEFAULT_TEMPERATURE
+        enableToolCall = false
+        systemPrompt = ""
         baseUrlError = false
         apiKeyError = false
+    }
+
+    fun applyPreset(preset: PresetProvider) {
+        providerType = preset.type.name
+        baseUrl = preset.defaultEndpoint
+        defaultModel = preset.defaultModel
+        baseUrlError = false
     }
 
     fun doSave() {
@@ -204,7 +221,10 @@ fun AiSettingScreen(
             workspaceId = workspaceId,
             timeoutMs = timeout,
             contextLength = contextLen,
-            temperature = temperature
+            temperature = temperature,
+            providerType = providerType,
+            enableToolCall = enableToolCall,
+            systemPrompt = systemPrompt
         )
     }
 
@@ -214,6 +234,7 @@ fun AiSettingScreen(
                 baseUrl = baseUrl.trim(),
                 apiKey = apiKey.trim(),
                 defaultModel = defaultModel.trim(),
+                providerType = providerType,
                 timeoutMs = timeoutMs.toLongOrNull() ?: AppConstants.AI_CLOUD_TIMEOUT_MS,
                 contextLength = contextLength.toIntOrNull() ?: AppConstants.DEFAULT_CONTEXT_LENGTH,
                 temperature = temperature
@@ -236,7 +257,16 @@ fun AiSettingScreen(
                 Spacer(Modifier.height(4.dp))
             }
 
-            // 作用域选择
+            item {
+                Text("快速选择提供商", style = MaterialTheme.typography.labelMedium)
+                Spacer(Modifier.height(4.dp))
+                AssistChip(
+                    onClick = { showPresetDialog = true },
+                    label = { Text("点击选择预设提供商") }
+                )
+                Spacer(Modifier.height(4.dp))
+            }
+
             item {
                 Text("作用域", style = MaterialTheme.typography.labelMedium)
                 Spacer(Modifier.height(4.dp))
@@ -257,7 +287,6 @@ fun AiSettingScreen(
                 Spacer(Modifier.height(4.dp))
             }
 
-            // BaseUrl
             item {
                 OutlinedTextField(
                     value = baseUrl,
@@ -266,7 +295,7 @@ fun AiSettingScreen(
                         if (it.isNotBlank()) baseUrlError = !URL_REGEX.matches(it.trim())
                         else baseUrlError = false
                     },
-                    label = { Text("中转站 URL") },
+                    label = { Text("API 地址 (Base URL)") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     isError = baseUrlError,
@@ -276,7 +305,6 @@ fun AiSettingScreen(
                 )
             }
 
-            // API Key
             item {
                 OutlinedTextField(
                     value = apiKey,
@@ -296,7 +324,6 @@ fun AiSettingScreen(
                 )
             }
 
-            // 默认模型
             item {
                 OutlinedTextField(
                     value = defaultModel,
@@ -307,7 +334,6 @@ fun AiSettingScreen(
                 )
             }
 
-            // 获取模型 + 选择
             item {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
@@ -338,7 +364,6 @@ fun AiSettingScreen(
                 }
             }
 
-            // 手动模式开关
             item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Switch(
@@ -377,7 +402,6 @@ fun AiSettingScreen(
                 }
             }
 
-            // timeoutMs
             item {
                 Text(
                     "请求超时 (ms)",
@@ -393,7 +417,6 @@ fun AiSettingScreen(
                 )
             }
 
-            // contextLength
             item {
                 Text(
                     "上下文长度",
@@ -409,7 +432,6 @@ fun AiSettingScreen(
                 )
             }
 
-            // temperature
             item {
                 Text(
                     "Temperature: ${String.format("%.1f", temperature)}",
@@ -431,7 +453,30 @@ fun AiSettingScreen(
                 }
             }
 
-            // 错误显示
+            item {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Switch(
+                        checked = enableToolCall,
+                        onCheckedChange = { enableToolCall = it }
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        "启用工具调用 (Tool Call)",
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
+
+            item {
+                OutlinedTextField(
+                    value = systemPrompt,
+                    onValueChange = { systemPrompt = it },
+                    label = { Text("系统提示词 (System Prompt)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    maxLines = 4
+                )
+            }
+
             error?.let {
                 item {
                     Text(
@@ -444,7 +489,6 @@ fun AiSettingScreen(
 
             item { Spacer(Modifier.height(4.dp)) }
 
-            // 其他操作
             item {
                 Text("其他操作", style = MaterialTheme.typography.labelMedium)
             }
@@ -484,7 +528,6 @@ fun AiSettingScreen(
 
             item { Spacer(Modifier.height(8.dp)) }
 
-            // 保存按钮
             item {
                 Button(
                     onClick = { doSave() },
@@ -506,7 +549,50 @@ fun AiSettingScreen(
         }
     }
 
-    // 模型选择对话框
+    if (showPresetDialog) {
+        AlertDialog(
+            onDismissRequest = { showPresetDialog = false },
+            title = { Text("选择预设提供商") },
+            text = {
+                LazyColumn(
+                    modifier = Modifier.height(400.dp)
+                ) {
+                    items(viewModel.presets, key = { it.name }) { preset ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    applyPreset(preset)
+                                    showPresetDialog = false
+                                }
+                                .padding(vertical = 8.dp)
+                        ) {
+                            Column {
+                                Text(
+                                    preset.name,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                                if (preset.defaultEndpoint.isNotEmpty()) {
+                                    Text(
+                                        preset.defaultEndpoint,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showPresetDialog = false }) {
+                    Text("取消")
+                }
+            }
+        )
+    }
+
     if (showModelDialog && models.isNotEmpty()) {
         AlertDialog(
             onDismissRequest = { showModelDialog = false },
@@ -563,7 +649,6 @@ fun AiSettingScreen(
         )
     }
 
-    // 导出配置对话框
     if (showExportDialog) {
         AlertDialog(
             onDismissRequest = { showExportDialog = false },

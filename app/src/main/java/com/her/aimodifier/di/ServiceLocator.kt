@@ -2,6 +2,11 @@ package com.her.aimodifier.di
 
 import android.content.Context
 import com.her.aimodifier.ai.client.OpenAiStreamClient
+import com.her.aimodifier.ai.enhance.ConversationMarkupManager
+import com.her.aimodifier.ai.enhance.ConversationRoundManager
+import com.her.aimodifier.ai.enhance.FileBindingService
+import com.her.aimodifier.ai.enhance.MultiServiceManager
+import com.her.aimodifier.ai.enhance.ReferenceManager
 import com.her.aimodifier.ai.local_gguf.LocalGgufManager
 import com.her.aimodifier.ai.memory.GlobalPromptMemoryManager
 import com.her.aimodifier.ai.routing.AiTaskRouter
@@ -37,6 +42,10 @@ object ServiceLocator {
 
     @Volatile
     private var initialized = false
+
+    // ---- 应用 Context ----
+    lateinit var appContext: Context
+        private set
 
     // ---- 数据层 ----
     lateinit var database: AppDatabase
@@ -87,6 +96,12 @@ object ServiceLocator {
         private set
     lateinit var aiTaskRouter: AiTaskRouter
         private set
+    lateinit var multiServiceManager: MultiServiceManager
+        private set
+    lateinit var conversationRoundManager: ConversationRoundManager
+        private set
+    lateinit var fileBindingService: FileBindingService
+        private set
 
     // ---- 工作区 ----
     lateinit var workspaceManager: WorkspaceManager
@@ -108,6 +123,7 @@ object ServiceLocator {
     fun init(context: Context) {
         if (initialized) return
         val appCtx = context.applicationContext
+        appContext = appCtx
 
         // 数据层
         database = AppDatabase.get(appCtx)
@@ -133,7 +149,12 @@ object ServiceLocator {
         openAiClient = OpenAiStreamClient()
         localGgufManager = LocalGgufManager(appCtx, rootEnvDetector)
         promptMemory = GlobalPromptMemoryManager(encryptedPrefs)
-        aiTaskRouter = AiTaskRouter(openAiClient, localGgufManager, aiConfigRepository)
+        aiTaskRouter = AiTaskRouter(openAiClient, localGgufManager, aiConfigRepository, appCtx)
+
+        // AI 增强模块
+        multiServiceManager = MultiServiceManager(appCtx)
+        conversationRoundManager = ConversationRoundManager()
+        fileBindingService = FileBindingService(appCtx)
 
         // 工作区管理器
         workspaceManager = WorkspaceManager(workspaceRepository, chatSessionRepository)
